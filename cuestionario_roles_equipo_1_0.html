@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Test de Roles de Equipo - Belbin</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root { 
+            --primary: #4472c4;
+            --azul-retorika: #003366; 
+            --bg-mesa: #f1f5f9; 
+            --texto: #475569;
+            --text-dark: #1a2b4a;
+            --border-soft: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-mesa); 
+            color: var(--texto);
+            line-height: 1.6;
+            padding: 20px; 
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .container { 
+            max-width: 1000px;
+            width: 100%;
+            margin: 20px auto; 
+            background: white; 
+            padding: 0; 
+            border-radius: 16px; 
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); 
+            overflow: hidden;
+        }
+
+        .logo-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 30px 50px 10px 50px; background: white; 
+        }
+        
+        .logo-placeholder { 
+            font-weight: 800; font-size: 24px; color: var(--azul-retorika); 
+            letter-spacing: 2px; font-family: 'Montserrat', sans-serif;
+        }
+
+        .hero-section { 
+            background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%); 
+            padding: 40px 50px; 
+            border-bottom: 1px solid var(--border-soft); 
+            text-align: left;
+        }
+
+        .hero-section h1 { 
+            font-size: 32px; color: var(--text-dark); font-weight: 400; 
+            margin: 0 0 10px 0; font-family: 'Montserrat', sans-serif;
+        }
+
+        .hero-section h1 strong { font-weight: 800; color: var(--primary); }
+        .hero-section p { margin: 0; color: var(--texto); max-width: 650px; font-size: 15px;}
+        
+        .content-padding { padding: 40px 50px; }
+
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.4s; }
+        
+        h2 { 
+            font-family: 'Montserrat', sans-serif; color: var(--text-dark); 
+            font-size: 22px; margin-top: 0; margin-bottom: 10px;
+        }
+        
+        .step p { margin-bottom: 20px; font-size: 15px; }
+        .step p strong { font-weight: 700; font-size: 18px; color: var(--text-dark); font-family: 'Montserrat', sans-serif;}
+
+        .options-grid { display: grid; gap: 12px; margin: 20px 0; }
+        
+        .option-card { 
+            display: flex; align-items: center; padding: 15px 20px; border-radius: 12px; 
+            cursor: pointer; background: #f8faff; border: 1px solid var(--border-soft); 
+            transition: all 0.2s; font-weight: 500; color: var(--text-dark); font-size: 15px;
+        }
+        .option-card:hover { 
+            background: #eef2ff; border-color: #cbd5e1; transform: translateY(-2px); 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .option-card.selected { 
+            border-color: var(--primary); background: #eef2ff; box-shadow: 0 0 0 1px var(--primary); 
+            font-weight: 600;
+        }
+
+        .nav-buttons { display: flex; justify-content: space-between; gap: 15px; margin-top: 30px; }
+        
+        .btn-nav { 
+            background: #f1f5f9; color: var(--text-dark); padding: 14px 25px; 
+            border-radius: 10px; cursor: pointer; border: none; font-weight: 600; 
+            width: auto !important; font-family: 'Inter', sans-serif; transition: 0.2s;
+        }
+        .btn-nav:hover:not(:disabled) { background: #e2e8f0; transform: translateY(-2px);}
+        .btn-nav:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-next { background: var(--primary); color: white;}
+        .btn-next:hover:not(:disabled) { background: #365da3; }
+
+        /* Icono Info y Tooltip */
+        .info-icon {
+            position: relative; display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; background: var(--primary); color: white;
+            border-radius: 50%; font-size: 13px; cursor: help; margin-left: 8px;
+            font-weight: bold; vertical-align: middle; font-family: 'Montserrat', sans-serif;
+            transition: background 0.2s;
+        }
+        .info-icon:hover { background: #365da3; }
+
+        .info-icon .tooltip-text {
+            visibility: hidden; width: 280px; background-color: var(--text-dark); color: #fff;
+            text-align: left; border-radius: 10px; padding: 12px 16px; position: absolute;
+            z-index: 100; bottom: 140%; left: 50%; transform: translateX(-50%) translateY(10px);
+            opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 13px; font-weight: 400; line-height: 1.5;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); font-family: 'Inter', sans-serif; pointer-events: none;
+        }
+        
+        .info-icon .tooltip-text::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px;
+            border-width: 6px; border-style: solid; border-color: var(--text-dark) transparent transparent transparent;
+        }
+
+        .info-icon:hover .tooltip-text { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ==========================================
+           DISEÑO DASHBOARD (RESULTADOS) AJUSTADO
+        ========================================== */
+        
+        .dashboard-header { text-align: center; margin-bottom: 30px; }
+        .dashboard-header h2 { font-size: 26px; margin-bottom: 5px; color: var(--azul-retorika); }
+        .dashboard-header p { font-size: 15px; margin: 0; color: var(--texto); }
+
+        .dashboard-grid { 
+            display: grid; 
+            /* Uso de minmax(0, 1fr) para evitar que los elementos internos desborden la caja (Grid Blowout) */
+            grid-template-columns: 280px minmax(0, 1fr); 
+            gap: 20px; 
+            align-items: start; 
+        }
+
+        .dash-card { 
+            background: white; border: 1px solid var(--border-soft); 
+            border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); 
+            margin-bottom: 20px;
+            min-width: 0; /* Previene el desborde en Flex/Grid items */
+        }
+        
+        .dash-card:last-child { margin-bottom: 0; }
+
+        .dash-title { 
+            margin: 0 0 15px 0; font-size: 13px; color: var(--texto); 
+            text-transform: uppercase; font-family: 'Montserrat', sans-serif; 
+            letter-spacing: 0.5px; font-weight: 800; border-bottom: 1px solid var(--bg-mesa); padding-bottom: 10px;
+        }
+
+        /* 1. Podio Compacto Horizontal */
+        .compact-podium { display: flex; flex-direction: column; gap: 8px; }
+        .podium-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 10px 15px; border-radius: 8px; font-weight: 700; font-size: 13px; 
+            font-family: 'Inter', sans-serif;
+        }
+        .podium-medal { display: flex; align-items: center; gap: 6px; width: 60px; }
+        .podium-name { flex: 1; text-align: left; font-family: 'Montserrat', sans-serif; font-size: 12.5px;}
+        .podium-score { font-size: 13px; opacity: 0.9; }
+
+        .gold-row { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .silver-row { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .bronze-row { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
+
+        /* 2. Gráficas Compactas Antidesborde */
+        .charts-container { 
+            display: grid; 
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); 
+            gap: 15px; 
+        }
+        .chart-wrapper { position: relative; height: 220px; width: 100%; min-width: 0; }
+
+        /* 3. Heatmap Ultra-Compacto Antidesborde */
+        .compact-heatmap { 
+            display: grid; 
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); 
+            gap: 10px; 
+        }
+        .heat-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+        
+        .heat-header { 
+            font-size: 10px; text-transform: uppercase; font-weight: 800; 
+            padding: 8px 4px; text-align: center; border-radius: 6px; color: white; 
+            font-family: 'Montserrat', sans-serif; margin-bottom: 5px; letter-spacing: 0.5px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .header-mental { background: #3b82f6; } 
+        .header-accion { background: #ec4899; } 
+        .header-social { background: #22c55e; } 
+
+        .heat-card { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 8px 10px; border-radius: 8px; color: white; font-size: 13px; 
+            font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.1s;
+            gap: 5px;
+        }
+        .heat-card:hover { transform: scale(1.02); }
+        .heat-card .role-name { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700; line-height: 1.1; display: block;}
+        .heat-card .stars { font-size: 10px; color: rgba(255,255,255,0.8); margin-top: 2px; display: block;}
+        .heat-card .score { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 4px; flex-shrink: 0;}
+
+        /* Icono Info Miniatura para el Heatmap */
+        .info-mini {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 16px; height: 16px; background: rgba(255,255,255,0.25); color: white;
+            border-radius: 50%; font-size: 10px; cursor: help; font-family: 'Montserrat', sans-serif;
+            position: relative; flex-shrink: 0;
+        }
+        .info-mini .tooltip-text {
+            visibility: hidden; width: 220px; background-color: var(--text-dark); color: #fff;
+            text-align: left; border-radius: 8px; padding: 10px; position: absolute;
+            z-index: 100; bottom: 150%; right: -10px; opacity: 0; font-size: 11px;
+            font-weight: 400; line-height: 1.4; pointer-events: none; white-space: normal;
+            font-family: 'Inter', sans-serif;
+        }
+        .info-mini:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+
+        /* Responsive Mobile */
+        @media (max-width: 850px) {
+            .dashboard-grid { grid-template-columns: 1fr; } 
+            .charts-container { grid-template-columns: 1fr; gap: 15px;}
+            .chart-wrapper { height: 200px; }
+            .compact-heatmap { grid-template-columns: 1fr; }
+            .content-padding { padding: 25px 15px !important; }
+            .logo-header { display: grid !important; grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 15px; padding: 20px 15px !important; }
+            .logo-placeholder { font-size: 18px; grid-column: 1 / 2; grid-row: 1 / 2; }
+            .logo-header > div:last-child { grid-column: 1 / 3; grid-row: 2 / 3; width: 100%; margin-top: 0 !important; }
+            .logo-header > div:last-child button { width: 100%; padding: 12px; }
+            .nav-buttons { flex-direction: column-reverse; gap: 10px; }
+            .btn-nav { width: 100% !important; justify-content: center; padding: 14px; }
+        }
+
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        .pdf-page { width: 210mm; height: 297mm; background: white; font-family: 'Inter', sans-serif; position: relative; box-sizing: border-box; overflow: hidden; }
+        .pdf-content-wrapper { position: absolute; top: 35px; bottom: 85px; left: 45px; right: 45px; display: flex; flex-direction: column; }
+        .pdf-footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 75px; padding: 15px 45px; background: white; border-top: 1px solid #e2e8f0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+        .texto-plan-ajustable { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; margin:0; line-height:1.45; font-size: 12px; color:#475569; }
+    </style>
+</head>
+<body>
+
+
+<div id="loading-modal-roles" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); z-index:9999; align-items:center; justify-content:center; flex-direction:column; color:white; font-family:'Montserrat',sans-serif; font-size:18px; font-weight:700;">
+    <div style="border:4px solid rgba(255,255,255,0.1); border-top:4px solid #4472c4; border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite; margin-bottom:15px;"></div>
+    Generando PDF Premium...
+</div>
+
+<div id="nombreModalRoles" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(26,43,74,0.8); align-items:center; justify-content:center; z-index:9998; animation:fadeIn 0.3s;">
+    <div style="background:white; padding:40px; border-radius:16px; max-width:400px; width:90%; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+        <h2 style="color:#1a2b4a; font-family:'Montserrat',sans-serif; margin-top:0;">Tu informe personalizado</h2>
+        <p style="margin-bottom:25px; color:#475569; font-size:14px;">Introduce tus datos para generar el informe PDF y enviarte una copia a tu correo.</p>
+        <input type="text" id="roles-nombreUsuario" placeholder="Tu Nombre y Apellidos" style="width:100%; padding:14px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:15px; font-family:'Inter',sans-serif; font-size:15px; outline:none; box-sizing:border-box;">
+        <input type="email" id="roles-userEmail" placeholder="Tu Correo Electrónico" style="width:100%; padding:14px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:25px; font-family:'Inter',sans-serif; font-size:15px; outline:none; box-sizing:border-box;">
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button onclick="document.getElementById('nombreModalRoles').style.display='none'" style="background:transparent; color:#64748b; padding:12px 20px; border:none; cursor:pointer; font-weight:600; font-family:'Inter',sans-serif;">Cancelar</button>
+            <button onclick="rolesConfirmarNombre()" style="background:#4472c4; color:white; padding:12px 25px; border:none; border-radius:10px; cursor:pointer; font-weight:700; box-shadow:0 4px 6px rgba(68,114,196,0.2); font-family:'Inter',sans-serif;">GENERAR Y ENVIAR 📥</button>
+        </div>
+    </div>
+</div>
+
+<div id="contenedor-impresion-roles" style="position:absolute; left:-9999px; top:0; display:flex; flex-direction:column; gap:50px;">
+
+    <div class="pdf-page">
+        <div class="pdf-content-wrapper">
+            <div style="flex-shrink:0; text-align:center; margin-bottom:10px; height:35px; position:relative;">
+                <span style="font-weight:800; font-size:24px; color:#003366; letter-spacing:2px; font-family:'Montserrat',sans-serif;">RETORIKA</span>
+            </div>
+            <div style="flex-shrink:0; text-align:center; margin-bottom:20px;">
+                <h1 style="margin:0; font-family:'Montserrat'; font-size:26px; font-weight:800; color:#1a2b4a; text-transform:uppercase; letter-spacing:1px;">AUDITORÍA DE ROLES DE EQUIPO</h1>
+                <p style="margin:5px 0 0 0; font-size:15px; color:#4472c4; font-weight:700;">Modelo Belbin · Perfil Operativo</p>
+            </div>
+            <div style="flex-shrink:0; border-top:2px solid #e2e8f0; border-bottom:2px solid #e2e8f0; padding:15px 10px; display:flex; justify-content:space-between; margin-bottom:20px;">
+                <div>
+                    <p style="margin:0; font-size:10px; color:#64748b; text-transform:uppercase; font-weight:700;">Profesional Evaluado</p>
+                    <p style="margin:4px 0 0 0; font-size:16px; font-weight:800; color:#1a2b4a;" id="roles-pdf-nombre">Nombre del Usuario</p>
+                </div>
+                <div style="text-align:right;">
+                    <p style="margin:0; font-size:10px; color:#64748b; text-transform:uppercase; font-weight:700;">Área de Evaluación</p>
+                    <p style="margin:4px 0 0 0; font-size:15px; font-weight:700; color:#4472c4;">Roles de Equipo Belbin</p>
+                </div>
+            </div>
+            <div style="flex-grow:1; display:flex; gap:20px; margin-bottom:20px;">
+                <div style="width:38%; display:flex; flex-direction:column; justify-content:space-between; gap:15px;">
+                    <div style="flex-grow:1; border:1px solid #e2e8f0; border-radius:12px; padding:15px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.02); display:flex; flex-direction:column; justify-content:center;">
+                        <p style="margin:0 0 10px 0; font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.5px;">ROL DOMINANTE</p>
+                        <span style="font-size:42px; font-weight:800; color:#003366; font-family:'Montserrat'; line-height:1.1;" id="roles-pdf-top-role">—</span>
+                        <p style="margin:10px 0 0 0; font-size:28px; font-weight:800; color:#4472c4; font-family:'Montserrat';" id="roles-pdf-top-pct">0%</p>
+                    </div>
+                    <div style="flex-shrink:0; background:#f8faff; border:1px solid #dbeafe; border-radius:12px; padding:15px;">
+                        <p style="margin:0 0 6px 0; font-size:9.5px; font-weight:800; color:#003366; text-transform:uppercase;">PODIO DE CATEGORÍAS</p>
+                        <div id="roles-pdf-podium" style="display:flex; flex-direction:column; gap:6px;"></div>
+                    </div>
+                </div>
+                <div style="width:62%; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 4px 6px rgba(0,0,0,0.02); display:flex; flex-direction:column; background:#ffffff;">
+                    <h3 style="margin:0 0 15px 0; font-size:15px; font-weight:800; color:#1a2b4a; text-transform:uppercase; font-family:'Montserrat'; text-align:center;">Mapa de Roles</h3>
+                    <div id="roles-pdf-bars" style="display:flex; flex-direction:column; gap:10px; flex-grow:1; justify-content:center;"></div>
+                </div>
+            </div>
+            <div style="flex-shrink:0; border:1px solid #e2e8f0; border-radius:12px; padding:18px; box-shadow:0 4px 6px rgba(0,0,0,0.02);">
+                <h3 style="margin:0 0 10px 0; font-size:14px; font-weight:800; color:#1a2b4a; text-transform:uppercase; letter-spacing:0.5px;">Resumen Estratégico</h3>
+                <p id="roles-pdf-resumen" style="margin:0; font-size:12px; color:#475569; line-height:1.5;"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="pdf-page">
+        <div class="pdf-content-wrapper">
+            <div style="flex-shrink:0; text-align:center; margin-bottom:10px; height:35px; position:relative;">
+                <span style="font-weight:800; font-size:24px; color:#003366; letter-spacing:2px; font-family:'Montserrat',sans-serif;">RETORIKA</span>
+            </div>
+            <div style="flex-shrink:0;">
+                <h2 style="font-family:'Montserrat'; font-size:24px; color:#003366; margin-top:0; margin-bottom:10px;">2. Radiografía de tu Rol</h2>
+                <p style="margin:0 0 20px 0; font-size:14px; color:#475569; line-height:1.6;" id="roles-pdf-p2-desc">Tu perfil Belbin refleja una tendencia...</p>
+            </div>
+            <div id="roles-pdf-p2-icons" style="display:grid; grid-template-columns:1fr 1fr; grid-template-rows:repeat(7,1fr); gap:10px; flex-grow:1; min-height:0; margin-bottom:20px;"></div>
+            <div style="display:flex; gap:20px; flex-shrink:0; margin-top:auto; padding-top:25px;">
+                <div style="flex:1; display:flex; flex-direction:column; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:20px;">
+                    <h3 style="color:#16a34a; margin:0 0 15px 0; font-family:'Montserrat'; font-size:14.5px; text-transform:uppercase; flex-shrink:0;">Puntos Positivos</h3>
+                    <div id="roles-pdf-p2-pos" style="display:flex; flex-direction:column; gap:12px; justify-content:flex-start; overflow:hidden;"></div>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; background:#fef2f2; border:1px solid #fecaca; border-radius:12px; padding:20px;">
+                    <h3 style="color:#dc2626; margin:0 0 15px 0; font-family:'Montserrat'; font-size:14.5px; text-transform:uppercase; flex-shrink:0;">Puntos a Vigilar</h3>
+                    <div id="roles-pdf-p2-neg" style="display:flex; flex-direction:column; gap:12px; justify-content:flex-start; overflow:hidden;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pdf-page">
+        <div class="pdf-content-wrapper" id="roles-content-page-3">
+            <div style="flex-shrink:0; text-align:center; margin-bottom:10px; height:35px; position:relative;">
+                <span style="font-weight:800; font-size:24px; color:#003366; letter-spacing:2px; font-family:'Montserrat',sans-serif;">RETORIKA</span>
+            </div>
+            <div style="flex-shrink:0;">
+                <h2 style="font-family:'Montserrat'; font-size:24px; color:#003366; margin-top:0; margin-bottom:10px;">3. Recomendaciones de Choque</h2>
+                <p style="color:#64748b; font-size:13.5px; margin-bottom:20px;" id="roles-pdf-p3-sub">Reglas de oro inmediatas basadas en tu rol dominante.</p>
+            </div>
+            <div id="roles-pdf-p3-quickwins" style="flex-grow:1; display:flex; flex-direction:column; justify-content:space-between; gap:12px; min-height:0;"></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="container">
+    
+    <div class="logo-header">
+        <div id="logo-container">
+            <span class="logo-placeholder">RETORIKA</span>
+        </div>
+    </div>
+
+    <section class="hero-section" id="hero-texts">
+        <h1>Test de <strong>Roles de Equipo</strong></h1>
+        <p>
+            Descubre tu perfil dentro de un equipo según el modelo Belbin. 
+            Responde a las preguntas y analiza qué rol predomina en tu forma de trabajar.
+            <span class="info-icon">i
+                <span class="tooltip-text">El Dr. Meredith Belbin identificó que el éxito de un equipo no depende de que sus miembros sean inteligentes, sino de que sus comportamientos sean equilibrados. Su modelo define 9 roles esenciales para que un equipo sea altamente productivo.</span>
+            </span>
+        </p>
+    </section>
+
+    <div class="content-padding">
+        <div id="quiz-container"></div>
+
+        <div id="results" class="step">
+            <div class="dashboard-header">
+                <h2>Auditoría Completada</h2>
+                <p>Este es el desglose técnico de tu perfil operativo.</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-left">
+                    <div class="dash-card">
+                        <h3 class="dash-title">Podio de Categorías</h3>
+                        <div id="podium-container" class="compact-podium"></div>
+                    </div>
+                    
+                    <div class="dash-card" style="background: #f8faff; border-color: #dbeafe;">
+                        <h3 class="dash-title" style="border-bottom: none; margin-bottom: 5px; color: var(--primary);">Resumen Estratégico</h3>
+                        <div id="report-area"></div>
+                        <button class="btn-nav btn-next" style="width: 100%; margin-top: 20px; padding: 14px; font-size: 13.5px;" id="roles-pdf-btn" onclick="rolesPedirNombre()">📥 Descargar PDF Premium</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-right">
+                    <div class="dash-card">
+                        <h3 class="dash-title">Desglose de Roles (%)</h3>
+                        <div class="charts-container">
+                            <div class="chart-wrapper"><canvas id="chartLeft"></canvas></div>
+                            <div class="chart-wrapper"><canvas id="chartRight"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="dash-card">
+                        <h3 class="dash-title">Mapa de Calor Operativo</h3>
+                        <div id="roles-heatmap" class="compact-heatmap"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const mapping = [
+        { A: "Buscador de Recursos", B: "Coordinador", C: "Creativo", D: "Coordinador", E: "Finalizador", F: "Impulsor", G: "Implementador", H: "Evaluador", I: "Especialista" },
+        { A: "Implementador", B: "Impulsor", C: "Buscador de Recursos", D: "Evaluador", E: "Impulsor", F: "Coordinador", G: "Creativo", H: "Finalizador", I: "Especialista" },
+        { A: "Coordinador", B: "Finalizador", C: "Impulsor", D: "Creativo", E: "Cohesionador", F: "Buscador de Recursos", G: "Evaluador", H: "Implementador", I: "Especialista" },
+        { A: "Cohesionador", B: "Impulsor", C: "Evaluador", D: "Implementador", E: "Creativo", F: "Finalizador", G: "Buscador de Recursos", H: "Coordinador", I: "Especialista" },
+        { A: "Evaluador", B: "Implementador", C: "Cohesionador", D: "Coordinador", E: "Buscador de Recursos", F: "Coordinador", G: "Especialista", H: "Creativo", I: "Especialista" },
+        { A: "Creativo", B: "Coordinador", C: "Coordinador", D: "Finalizador", E: "Evaluador", F: "Implementador", G: "Impulsor", H: "Buscador de Recursos", I: "Especialista" },
+        { A: "Impulsor", B: "Evaluador", C: "Finalizador", D: "Buscador de Recursos", E: "Implementador", F: "Creativo", G: "Impulsor", H: "Cohesionador", I: "Especialista" }
+    ];
+
+    const labels = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
+    const questionTexts = [
+        "1. Qué es lo que creo que puedo aportar a un equipo:",
+        "2. Si tengo un defecto para el trabajo en equipo, es que:",
+        "3. Cuando participo con otras personas en un proyecto:",
+        "4. Mi actitud característica ante el trabajo en equipo consiste en:",
+        "5. Obtengo satisfacción en el trabajo porque:",
+        "6. Si se me asignara de repente una tarea difícil en un tiempo limitado y con gente que no conozco:",
+        "7. Problemas que suelo padecer cuando trabajo en grupo:"
+    ];
+
+    const optionDescriptions = [
+        ["Creo que puedo detectar y aprovechar rápidamente las nuevas oportunidades.", "Puedo trabajar bien con personas de muy diversa índole.", "Uno de mis talentos naturales es la creación de ideas.", "Mi habilidad consiste en que consigo involucrar a quienes creo que pueden aportar algo valioso para el grupo.", "Mi capacidad para hacer el seguimiento de los asuntos del equipo.", "Estoy dispuesto a espolear a la gente, y a hacer frente a una impopularidad temporal, si al final conduce a resultados que valen la pena.", "Me doy cuenta rápidamente de las soluciones que pueden funcionar, de cara a lo que pretende el equipo.", "Puedo presentar distintas alternativas razonadas, sin caer en ningún tipo de prejuicios.", "Se perfectamente de lo que hablo, cuando aporto algo al equipo."],
+        ["No estoy a gusto si las reuniones no están bien organizadas, controladas y bien dirigidas.", "Tiendo a tomar rápidamente el liderazgo sobre las operaciones, quizá porque reacciono impacientemente ante el ritmo del grupo.", "Tengo tendencia a hablar mucho cuando la cosa se pone interesante", "Mi punto de vista objetivo y racional, a veces me distancia de mis colegas.", "En ocasiones se me puede considerar enérgico o algo autoritario, cuando los temas apremian.", "Tiendo a estar demasiado pendiente de todos aquellos que defienden puntos de vista válidos, pero que no han sido tenidos en consideración.", "Suelo quedar demasiado enganchado con las ideas que se me ocurren, y a veces pierdo contacto con lo que está pasando.", "A veces me preocupo innecesariamente de los detalles y sobre la posibilidad de que las cosas salgan mal.", "Me cuesta contribuir a no ser que el tema tenga que ver con algo que yo conozca bien."],
+        ["Tengo habilidad para influir sobre las personas sin presionarlas", "Mi capacidad para estar al tanto de cómo va todo, evita que se cometan omisiones y errores por descuido.", "Estoy dispuesto a presionar a favor de la acción, a fin de que el grupo no malgaste el tiempo ni pierda de vista su objetivo principal.", "Siempre se puede contar con que aportaré algo original.", "Siempre estoy dispuesto a respaldar una buena sugerencia por el interés general.", "Me entusiasma buscar lo último en lo referente a nuevas ideas y herramientas.", "Creo que los demás aprecian mi capacidad para juzgar las cosas con objetividad.", "Tengo visión de conjunto y se comprobar que todo el trabajo esencial está organizado.", "Siempre actúo como un buen profesional, que sabe de lo suyo."],
+        ["Me gusta conocer bien a la gente con la que trabajo.", "No tengo problema para desafiar los puntos de vista de las demás o defender el mío en minoría.", "Normalmente encuentro argumentos lógicos para refutar las propuestas que no me parecen bien.", "Pienso que tengo talento para hacer que las cosas funcionen, una vez que el plan ha sido puesto en marcha.", "Tengo tendencia a evitar lo obvio y a buscar lo inesperado.", "Aporto un toque de perfeccionismo a cualquier tarea de equipo que acometa.", "No me importa hacer uso de los contactos que tengo fuera del grupo, para conseguir lo que necesitamos.", "Suelo tener una opinión propia cuando hay que tomar una decisión, aunque me interesa conocer todas las opiniones.", "Hacer bien las cosas que se hace bien."],
+        ["Disfruto analizando las situaciones y sopesando todas las opciones posibles para tomar las decisiones correctas.", "Quiero encontrar soluciones prácticas a los problemas.", "Me gusta fomentar unas buenas relaciones en el trabajo.", "Puedo participar e influir en las decisiones.", "Me gusta conocer a personas que tienen algo interesante que ofrecer.", "Se poner de acuerdo a los compañeros sobre las acciones que se deben tomar.", "Me encuentro en mi elemento cuando puedo dedicar toda mi atención a una tarea.", "Me gusta encontrar un campo que amplíe mi imaginación.", "Me permite utilizar mis cualidades y entrenarme para mejorar."],
+        ["Me gustaría concentrarme en algún sitio para buscar la forma de abordar la tarea, antes de ponernos a la tarea.", "Estaría dispuesto a trabajar con la persona que tuviera un enfoque más positivo o inteligente, por difícil que fuera su carácter.", "Intentaría encontrar algún modo de reducir el volumen de la tarea, determinando cuál sería la mejor aportación que podría hacer cada una de las distintas personas.", "Mi innato sentido para percibir lo que es urgente y prioritario ayudaría a asegurar que no nos retrasaríamos.", "Creo que permanecería sereno y conservaría mi capacidad para pensar correctamente.", "Sabría como traducir las ideas en acciones útiles para lo que nos piden.", "Estaría dispuesto a tomar la iniciativa si me pareciera que el grupo no está progresando.", "Soy de los que se dan cuenta rápidamente de lo que necesitamos para hacer lo que nos piden, y me pondría rápidamente a conseguirlo.", "Trataría de informarme sobre el tema tanto como pueda, antes de ponerme a hacer nada."],
+        ["Suelo mostrarme impaciente con aquellos que están obstaculizando el avance.", "Me suelen criticar por ser demasiado analítico y poco intuitivo.", "Mi afán de asegurarme de que todo está perfecto, puede frenar la marcha del grupo.", "Me aburro con bastante facilidad y me apoyo en algunos colegas para que me estimulen.", "Me resulta difícil ponerme en marcha si no veo claro los objetivos.", "En ocasiones soy muy torpe para explicar y aclarar ciertas ideas originales que se me ocurren.", "Soy consciente de que a veces los demás no están de acuerdo en lo que les pido que hagan.", "Suelo dudar en defender mis puntos de vista, para evitar desavenencias en el equipo.", "A veces me da por pensar que estoy perdiendo el tiempo y que lo haría mejor yo solo."]
+    ];
+
+    const reportData = {
+        roles: {
+            "Creativo": "Vital en equipos que necesitan ideas frescas y soluciones a problemas complejos donde otros se bloquean.",
+            "Especialista": "Aportas un valor técnico indispensable. Tu profesionalidad asegura la calidad y el rigor necesarios.",
+            "Evaluador": "El filtro de calidad del equipo. Tu objetividad evita que el grupo tome decisiones impulsivas.",
+            "Impulsor": "El motor del equipo. Tu coraje garantiza que los proyectos avancen y se cumplan los plazos.",
+            "Implementador": "Tu capacidad de organización es un pilar. Conviertes ideas abstractas en planes de trabajo eficientes.",
+            "Finalizador": "Garantizas la excelencia. Tu atención al detalle asegura que nada se pase por alto.",
+            "Cohesionador": "El pegamento del grupo. Tu diplomacia reduce el estrés y fomenta la colaboración.",
+            "Buscador de Recursos": "El puente con el exterior. Tu red de contactos trae oportunidades que el equipo no tendría.",
+            "Coordinador": "Líder natural. Sabes sacar lo mejor de cada persona y mantener el enfoque en los objetivos."
+        },
+        categorias: {
+            "Mentales": "Enfoque analítico y estratégico. Aportas el 'saber qué hacer' y el rigor intelectual.",
+            "Acción": "Enfoque ejecutor. Aseguras que las ideas se materialicen y los resultados lleguen.",
+            "Sociales": "Enfoque relacional. Gestionas las personas para que el grupo funcione armónicamente."
+        }
+    };
+
+    const roleDescriptions = {
+        "Creativo": "Genera ideas y resuelve problemas difíciles de forma original.",
+        "Especialista": "Aporta conocimientos técnicos específicos y habilidades concretas.",
+        "Evaluador": "Analiza las opciones de forma objetiva y juzga con precisión.",
+        "Impulsor": "Tiene iniciativa y coraje. Presiona para lograr resultados.",
+        "Implementador": "Transforma las ideas en acciones prácticas y organiza.",
+        "Finalizador": "Asegura que las tareas se completen con perfección sin errores.",
+        "Cohesionador": "Escucha, evita conflictos y fomenta la cooperación.",
+        "Buscador de Recursos": "Explora oportunidades y establece contactos externos.",
+        "Coordinador": "Aclara metas, promueve decisiones y delega eficazmente."
+    };
+
+    let currentStep = 0;
+    let scores = { "Creativo": 0, "Especialista": 0, "Evaluador": 0, "Impulsor": 0, "Implementador": 0, "Finalizador": 0, "Cohesionador": 0, "Buscador de Recursos": 0, "Coordinador": 0 };
+    let tempSelections = [];
+    let favorite = null;
+    let userAnswers = {};
+
+    function initQuiz() {
+        const container = document.getElementById('quiz-container');
+        questionTexts.forEach((text, i) => {
+            let html = `<div id="step-${i}" class="step ${i === 0 ? 'active' : ''}">
+                <h2>Pregunta ${i + 1} de 7</h2>
+                <p><strong>${text}</strong></p>
+                <p style="color: var(--primary); font-weight: 600; font-size: 14px; margin-top:-10px;">Paso 1: Selecciona las 3 que más te representen.</p>
+                <div class="options-grid">`;
+            
+            labels.slice(0, optionDescriptions[i].length).forEach((l, idx) => {
+                html += `<div class="option-card" onclick="selectOption(${i}, '${l}', this)"><strong>${l}.</strong>&nbsp; ${optionDescriptions[i][idx]}</div>`;
+            });
+
+            html += `</div>
+                <div class="nav-buttons">
+                    <button class="btn-nav" id="back-${i}" ${i === 0 ? 'disabled' : ''} onclick="goBack(${i})">Anterior</button>
+                    <button class="btn-nav btn-next" id="next-${i}" disabled onclick="goToPrioritize(${i})">Continuar</button>
+                </div>
+            </div>`;  
+
+            html += `<div id="prioritize-${i}" class="step">
+                <h2>Priorizar Pregunta ${i + 1}</h2>
+                <p>De estas 3, ¿cuál es tu <strong>favorita</strong>? <span style="color:var(--texto); font-size:13px;">(Sumará 2 puntos, las otras 1)</span></p>
+                <div class="options-grid" id="prioritize-grid-${i}"></div>
+                <div class="nav-buttons">
+                    <button class="btn-nav" onclick="backToSelect(${i})">Volver a Selección</button>
+                    <button class="btn-nav btn-next" id="finish-${i}" disabled onclick="submitStep(${i})">${i === 6 ? 'Finalizar Test' : 'Siguiente Pregunta'}</button>
+                </div>
+            </div>`;
+            
+            container.innerHTML += html;
+        });
+    }
+
+    window.selectOption = (qIdx, label, el) => {
+        if (el.classList.contains('selected')) {
+            el.classList.remove('selected');
+            tempSelections = tempSelections.filter(item => item !== label);
+        } else if (tempSelections.length < 3) {
+            el.classList.add('selected');
+            tempSelections.push(label);
+        }
+        document.getElementById(`next-${qIdx}`).disabled = (tempSelections.length !== 3);
+    };
+
+    window.goToPrioritize = (qIdx) => {
+        userAnswers[qIdx] = { choices: [...tempSelections], favorite: null };
+        document.getElementById(`step-${qIdx}`).classList.remove('active');
+        const prioGrid = document.getElementById(`prioritize-grid-${qIdx}`);
+        prioGrid.innerHTML = '';
+        
+        tempSelections.forEach(label => {
+            const idx = labels.indexOf(label);
+            const isFav = userAnswers[qIdx].favorite === label;
+            prioGrid.innerHTML += `<div class="option-card ${isFav ? 'selected' : ''}" onclick="selectFavorite(${qIdx}, '${label}', this)"><strong>${label}.</strong>&nbsp; ${optionDescriptions[qIdx][idx]}</div>`;
+        });
+        
+        document.getElementById(`prioritize-${qIdx}`).classList.add('active');
+        document.getElementById(`finish-${qIdx}`).disabled = !userAnswers[qIdx].favorite;
+        window.scrollTo(0,0);
+    };
+
+    window.selectFavorite = (qIdx, label, el) => {
+        const cards = document.querySelectorAll(`#prioritize-grid-${qIdx} .option-card`);
+        cards.forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        
+        favorite = label;
+        userAnswers[qIdx].favorite = label; 
+        document.getElementById(`finish-${qIdx}`).disabled = false;
+    };
+
+    window.submitStep = (qIdx) => {
+        if (qIdx < 6) {
+            tempSelections = [];
+            favorite = null;
+            document.getElementById(`prioritize-${qIdx}`).classList.remove('active');
+            document.getElementById(`step-${qIdx + 1}`).classList.add('active');
+            window.scrollTo(0,0);
+        } else {
+            calculateFinalScores();
+        }
+    };
+
+    window.goBack = (qIdx) => {
+        document.getElementById(`step-${qIdx}`).classList.remove('active');
+        const prevStepIdx = qIdx - 1;
+        document.getElementById(`step-${prevStepIdx}`).classList.add('active');
+
+        if (userAnswers[prevStepIdx]) {
+            tempSelections = [...userAnswers[prevStepIdx].choices];
+            favorite = userAnswers[prevStepIdx].favorite;
+            
+            const cards = document.querySelectorAll(`#step-${prevStepIdx} .option-card`);
+            cards.forEach(card => {
+                const label = card.innerText.split('.')[0].trim();
+                if (tempSelections.includes(label)) card.classList.add('selected');
+                else card.classList.remove('selected');
+            });
+            document.getElementById(`next-${prevStepIdx}`).disabled = false;
+        }
+        window.scrollTo(0,0);
+    };
+
+    window.backToSelect = (qIdx) => {
+        document.getElementById(`prioritize-${qIdx}`).classList.remove('active');
+        document.getElementById(`step-${qIdx}`).classList.add('active');
+        
+        const cards = document.querySelectorAll(`#step-${qIdx} .option-card`);
+        cards.forEach(card => {
+            const label = card.innerText.split('.')[0].trim();
+            if (tempSelections.includes(label)) card.classList.add('selected');
+        });
+        window.scrollTo(0,0);
+    };
+
+    window.fillRandomBelbin = () => {
+        userAnswers = {};
+        for(let qIdx = 0; qIdx <= 6; qIdx++) {
+            let availableLabels = labels.slice(0, optionDescriptions[qIdx].length);
+            let shuffled = availableLabels.sort(() => 0.5 - Math.random());
+            let picked3 = shuffled.slice(0, 3);
+            let fav = picked3[Math.floor(Math.random() * 3)];
+            userAnswers[qIdx] = { choices: picked3, favorite: fav };
+        }
+        
+        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+        document.getElementById('hero-texts').style.display = 'none';
+        calculateFinalScores();
+    };
+
+    function calculateFinalScores() {
+        Object.keys(scores).forEach(key => scores[key] = 0);
+        
+        for (let qIdx = 0; qIdx <= 6; qIdx++) {
+            const ans = userAnswers[qIdx];
+            ans.choices.forEach(label => {
+                const role = mapping[qIdx][label];
+                const points = (label === ans.favorite) ? 2 : 1;
+                scores[role] += points;
+            });
+        }
+        showResults();
+    }
+
+    function showResults() {
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('results').classList.add('active');
+        window.scrollTo(0,0);
+
+        const sortedRolesArray = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+        const sortedLabels = sortedRolesArray.map(item => item[0]);
+        const totalPoints = Object.values(scores).reduce((a, b) => a + b, 0);
+        const sortedPercentages = sortedLabels.map(label => ((scores[label] / totalPoints) * 100).toFixed(1));
+
+        const catScores = {
+            Mentales: scores["Creativo"] + scores["Evaluador"] + scores["Especialista"],
+            Acción: scores["Impulsor"] + scores["Implementador"] + scores["Finalizador"],
+            Sociales: scores["Coordinador"] + scores["Buscador de Recursos"] + scores["Cohesionador"]
+        };
+
+        // Gráficas Compactas
+        const roleColors = {
+            "Creativo": "#3b82f6", "Especialista": "#8b5cf6", "Evaluador": "#E22684",
+            "Impulsor": "#ef4444", "Implementador": "#10b981", "Finalizador": "#14b8a6",
+            "Cohesionador": "#f59e0b", "Buscador de Recursos": "#f97316", "Coordinador": "#1e293b"
+        };
+        const barColors = sortedLabels.map(label => roleColors[label]);
+
+        const dataLeft = { labels: sortedLabels.slice(0, 5), values: sortedPercentages.slice(0, 5), colors: barColors.slice(0, 5) };
+        const dataRight = { labels: sortedLabels.slice(5), values: sortedPercentages.slice(5), colors: barColors.slice(5) };
+
+        const renderHalfChart = (canvasId, labels, data, colors) => {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ 
+                        data: data, backgroundColor: colors, borderRadius: 4, barThickness: 18 
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { left: 0, right: 35, top: 0, bottom: 0 } },
+                    scales: {
+                        x: { display: false, max: 45 },
+                        y: { 
+                            grid: { display: false },
+                            /* AQUÍ LA CLAVE: Reducido de 140 a 110 para dar margen a las barras */
+                            afterFit: (scaleInstance) => { scaleInstance.width = 110; },
+                            ticks: { 
+                                autoSkip: false, font: { family: 'Inter', size: 12, weight: '600' }, color: '#1a2b4a',
+                                callback: function(value) {
+                                    const label = this.getLabelForValue(value);
+                                    if (label === "Buscador de Recursos") return ["Buscador de", "Recursos"];
+                                    return label;
+                                }
+                            } 
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end', align: 'right', offset: 4,
+                            formatter: (v) => v + "%",
+                            font: { family: 'Inter', weight: 'bold', size: 12 }, color: '#475569'
+                        }
+                    }
+                }
+            });
+        };
+
+        Chart.register(ChartDataLabels);
+        if (window.myChartL) window.myChartL.destroy();
+        if (window.myChartR) window.myChartR.destroy();
+        window.myChartL = renderHalfChart('chartLeft', dataLeft.labels, dataLeft.values, dataLeft.colors);
+        window.myChartR = renderHalfChart('chartRight', dataRight.labels, dataRight.values, dataRight.colors);
+
+        // Podio Horizontal
+        const sortedCats = Object.entries(catScores).sort((a,b) => b[1] - a[1]);
+        document.getElementById('podium-container').innerHTML = `
+            <div class="podium-row gold-row">
+                <div class="podium-medal">🥇 1º</div>
+                <div class="podium-name">${sortedCats[0][0]}</div>
+                <div class="podium-score">${sortedCats[0][1]} pts</div>
+            </div>
+            <div class="podium-row silver-row">
+                <div class="podium-medal">🥈 2º</div>
+                <div class="podium-name">${sortedCats[1][0]}</div>
+                <div class="podium-score">${sortedCats[1][1]} pts</div>
+            </div>
+            <div class="podium-row bronze-row">
+                <div class="podium-medal">🥉 3º</div>
+                <div class="podium-name">${sortedCats[2][0]}</div>
+                <div class="podium-score">${sortedCats[2][1]} pts</div>
+            </div>
+        `;
+
+        // Heatmap Compacto
+        const roleGrid = document.getElementById('roles-heatmap');
+        roleGrid.innerHTML = ''; 
+
+        const categoriesDef = [
+            { name: "Mentales", class: "header-mental", roles: ["Creativo", "Evaluador", "Especialista"] },
+            { name: "De Acción", class: "header-accion", roles: ["Impulsor", "Implementador", "Finalizador"] },
+            { name: "Sociales", class: "header-social", roles: ["Coordinador", "Buscador de Recursos", "Cohesionador"] }
+        ];
+
+        categoriesDef.forEach(cat => {
+            let rolesHTML = "";
+            let totalCatPoints = 0;
+
+            cat.roles.forEach(roleName => {
+                const score = scores[roleName] || 0;
+                totalCatPoints += score;
+
+                let color = "#ef4444"; 
+                if (score >= 10) color = "#10b981"; 
+                else if (score >= 7) color = "#f59e0b"; 
+                else if (score >= 4) color = "#f97316"; 
+
+                let stars = "";
+                if (score >= 10) stars = "⭐⭐⭐";
+                else if (score >= 7) stars = "⭐⭐☆";
+                else if (score >= 4) stars = "⭐☆☆";
+                else stars = "☆☆☆";
+
+                let tooltipDesc = roleDescriptions[roleName] || "";
+
+                rolesHTML += `
+                    <div class="heat-card" style="background:${color};">
+                        <div>
+                            <span class="role-name">${roleName}</span>
+                            <span class="stars">${stars}</span>
+                        </div>
+                        <div class="score">
+                            ${score}
+                            <span class="info-mini">i<span class="tooltip-text">${tooltipDesc}</span></span>
+                        </div>
+                    </div>`;
+            });
+
+            roleGrid.innerHTML += `
+                <div class="heat-col">
+                    <div class="heat-header ${cat.class}">${cat.name} (${totalCatPoints})</div>
+                    ${rolesHTML}
+                </div>`;
+        });
+        
+        // Reporte Corto (Izquierda)
+        const topRole = sortedRolesArray[0][0];
+        const topCategory = sortedCats[0][0];
+        document.getElementById('report-area').innerHTML = `
+            <div style="margin-top: 15px;">
+                <p style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: var(--texto); margin: 0 0 5px 0;">Tu Rol Principal</p>
+                <p style="font-family: 'Montserrat', sans-serif; font-weight: 800; color: var(--text-dark); font-size: 18px; margin: 0 0 5px 0;">${topRole}</p>
+                <p style="font-size: 13px; line-height: 1.4; color: var(--texto); margin: 0 0 15px 0;">${reportData.roles[topRole]}</p>
+                
+                <p style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: var(--texto); margin: 0 0 5px 0;">Tu Enfoque</p>
+                <p style="font-family: 'Montserrat', sans-serif; font-weight: 800; color: var(--text-dark); font-size: 15px; margin: 0 0 5px 0;">${topCategory}</p>
+                <p style="font-size: 13px; line-height: 1.4; color: var(--texto); margin: 0;">${reportData.categorias[topCategory]}</p>
+            </div>`;
+    }
+    
+
+    // ==========================================
+    // BASE DE DATOS DE ROLES BELBIN
+    // ==========================================
+    const DB_ROLES = {
+        "Creativo": {
+            titulo: "El Creativo",
+            color: "#3b82f6",
+            desc1: "Genera ideas originales donde otros se bloquean. Tu mente produce soluciones inesperadas de alto valor, aunque a veces pierdes el hilo de la ejecución.",
+            desc3: "Tu creatividad es el recurso más valioso del equipo. El reto no es generar más ideas, sino aprender a aterrizarlas y comunicarlas de forma que otros puedan ejecutarlas.",
+            iconosDesc: [
+                { i: "💡", t: "Generas ideas y resuelves problemas difíciles de forma original." },
+                { i: "🌈", t: "Tu pensamiento lateral encuentra soluciones que el grupo no ve." },
+                { i: "🚀", t: "Elevas el nivel de ambición del equipo con tus propuestas." },
+                { i: "🧠", t: "Disfrutas de los desafíos complejos donde no hay respuesta evidente." },
+                { i: "🎨", t: "Combinas conceptos de campos distintos para crear algo nuevo." },
+                { i: "⚡", t: "Tu energía creativa es máxima al inicio de un proyecto." },
+                { i: "🔭", t: "Ves el potencial en ideas que aún no están completamente formadas." },
+                { i: "🌱", t: "Siembras posibilidades que otros pueden cultivar y hacer crecer." },
+                { i: "🧩", t: "Encuentras patrones y conexiones ocultas entre problemas distintos." },
+                { i: "🎯", t: "Cuando te enfocas, tu productividad creativa es difícil de igualar." },
+                { i: "🦋", t: "Transformas restricciones en palancas de innovación." },
+                { i: "🏗️", t: "Construyes marcos conceptuales que dan sentido a situaciones caóticas." },
+                { i: "🌊", t: "Tu flujo de ideas es constante y difícil de detener." },
+                { i: "🔮", t: "Anticipas tendencias y necesidades antes de que sean obvias para el grupo." }
+            ],
+            positivos: ["Innovas donde otros se bloquean.", "Generas soluciones inesperadas y de alto valor.", "Tu imaginación eleva el nivel del equipo.", "Ves lo que nadie más ve."],
+            negativos: ["Puedes perder el hilo de lo que ocurre en el equipo.", "Tus ideas no siempre son prácticas o ejecutables.", "Ignoras las normas establecidas cuando no te interesan."],
+            quickwins: [
+                { icon: "🎯", name: "Aterriza tus ideas", text: "Por cada idea que propongas, añade un mini-plan de 3 pasos. Tus compañeros necesitan ver la viabilidad, no solo el concepto." },
+                { icon: "⏱️", name: "Plazos de creatividad", text: "Reserva momentos específicos para innovar. Fuera de esos momentos, céntrate en ejecutar lo acordado." },
+                { icon: "🤝", name: "Alianza con el Implementador", text: "Encuentra a alguien del equipo que transforme tus ideas en acciones. Sin ejecución, la creatividad es ruido." },
+                { icon: "🛑", name: "Cierra el debate de ideas", text: "Aprende cuándo parar de generar alternativas. Un equipo que sigue creando conceptos nunca ejecuta." },
+                { icon: "📋", name: "Prioriza por impacto", text: "De todas tus ideas, elige solo una para defender con fuerza. Diluir tu energía en múltiples conceptos reduce tu influencia." },
+                { icon: "🔋", name: "Energía en el caos", text: "Úsate como recurso de emergencia creativa. Cuando el equipo esté atascado, ese es tu momento de brillar." }
+            ]
+        },
+        "Especialista": {
+            titulo: "El Especialista",
+            color: "#8b5cf6",
+            desc1: "Aportas conocimiento técnico que nadie más tiene. Tu rigor y profundidad elevan la calidad del equipo, aunque a veces te cuesta ver más allá de tu área de expertise.",
+            desc3: "Tu especialización es un activo crítico. El reto es aprender a compartirlo de forma accesible y a conectar tu expertise con el cuadro completo del proyecto.",
+            iconosDesc: [
+                { i: "🎓", t: "Dominas en profundidad tu campo con un nivel difícil de igualar." },
+                { i: "🔬", t: "Tu rigor técnico eleva la calidad de todo lo que toca el equipo." },
+                { i: "📚", t: "Mantienes tu conocimiento actualizado de forma constante y proactiva." },
+                { i: "🏆", t: "Eres la referencia indiscutible cuando la situación técnica se complica." },
+                { i: "🛡️", t: "Proteges al equipo de errores técnicos que podrían ser críticos." },
+                { i: "⚙️", t: "Tu independencia y autogestión son altamente valoradas." },
+                { i: "🎯", t: "Defines estándares de calidad que el equipo adopta como referencia." },
+                { i: "🔍", t: "Detectas matices técnicos que los perfiles más generalistas pasan por alto." },
+                { i: "💎", t: "Tu valor específico hace que seas insustituible en decisiones clave." },
+                { i: "📐", t: "Aplicas metodología y rigor sistemático a cada reto que abordas." },
+                { i: "🌐", t: "Conectas tu especialidad con las necesidades reales del proyecto." },
+                { i: "🔗", t: "Construyes puentes entre el conocimiento técnico y la toma de decisiones." },
+                { i: "⭐", t: "Tu profesionalidad asegura que el equipo nunca comprometa la calidad." },
+                { i: "🧲", t: "Atraes la confianza de clientes y stakeholders por tu autoridad técnica." }
+            ],
+            positivos: ["Aportas conocimiento técnico que nadie más tiene.", "Tu rigor eleva la calidad de todo el equipo.", "Eres la referencia cuando la situación se complica.", "Tu independencia te hace altamente confiable."],
+            negativos: ["Puedes ignorar todo lo que esté fuera de tu especialidad.", "A veces comunicas de forma demasiado técnica para el equipo.", "Te cuesta ver el cuadro completo del proyecto."],
+            quickwins: [
+                { icon: "🗣️", name: "Traduce tu expertise", text: "Practica explicar tus análisis en lenguaje no técnico. Un insight que nadie entiende no tiene valor estratégico." },
+                { icon: "🌐", name: "Amplía tu visión", text: "Dedica tiempo semanal a entender las áreas del proyecto que no son las tuyas. La visión de conjunto multiplica tu impacto." },
+                { icon: "⚡", name: "Comparte antes de terminar", text: "No esperes a tener el análisis perfecto. Comparte avances parciales para que el equipo pueda pivotar a tiempo." },
+                { icon: "🤝", name: "Conecta con el Coordinador", text: "El Coordinador puede ayudarte a comunicar tus conclusiones al resto del equipo de forma que sean accionables." },
+                { icon: "📐", name: "Estándares vs. plazos", text: "Aprende cuándo el 95% es suficientemente bueno. La perfección tiene un coste de tiempo que el equipo no siempre puede asumir." },
+                { icon: "🎓", name: "Mentor interno", text: "Comparte tu conocimiento con un colega. Te posiciona como líder de referencia y refuerza tu rol en el equipo." }
+            ]
+        },
+        "Evaluador": {
+            titulo: "El Evaluador",
+            color: "#E22684",
+            desc1: "Analizas todas las opciones con objetividad antes de decidir. Eres el filtro de calidad del equipo, aunque tu escepticismo puede a veces bloquear el avance.",
+            desc3: "Tu objetividad es el activo más valioso del equipo en momentos de decisión. El reto es calibrar cuándo es necesario más análisis y cuándo hay que avanzar con la información disponible.",
+            iconosDesc: [
+                { i: "⚖️", t: "Evalúas todas las opciones con rigor antes de tomar una decisión." },
+                { i: "🔎", t: "Tu análisis detecta riesgos y puntos débiles que otros no ven." },
+                { i: "🧊", t: "Mantienes la frialdad y objetividad cuando el grupo se deja llevar." },
+                { i: "🛡️", t: "Proteges al equipo de decisiones impulsivas con consecuencias graves." },
+                { i: "📊", t: "Tu pensamiento está orientado a datos, hechos y evidencias contrastadas." },
+                { i: "🎯", t: "Separas con precisión lo relevante de lo irrelevante en cada análisis." },
+                { i: "🔭", t: "Anticipas consecuencias a largo plazo que los demás no contemplan." },
+                { i: "🧠", t: "Tu inteligencia estratégica es un activo crítico en momentos de crisis." },
+                { i: "⚡", t: "Cuando das luz verde a una decisión, el equipo avanza con total confianza." },
+                { i: "📐", t: "Aplicas criterios consistentes y objetivos en cada evaluación." },
+                { i: "🔗", t: "Conectas la teoría con la práctica para validar la viabilidad de las ideas." },
+                { i: "🌡️", t: "Eres el termómetro que mide la temperatura real de cada propuesta." },
+                { i: "🏗️", t: "Construyes argumentos sólidos y bien fundamentados que el equipo respeta." },
+                { i: "💎", t: "Tu validación tiene un peso enorme; cuando apruebas algo, todos lo adoptan." }
+            ],
+            positivos: ["Tu objetividad protege al equipo de decisiones impulsivas.", "Analizas todas las opciones antes de decidir.", "Eres el mejor filtro de calidad del grupo.", "Tu frialdad bajo presión es un activo crítico."],
+            negativos: ["Puedes bloquear el avance con análisis excesivos.", "Te cuesta generar entusiasmo en el equipo.", "Tu escepticismo puede desanimar ideas válidas antes de explorarlas."],
+            quickwins: [
+                { icon: "⏰", name: "Análisis con límite de tiempo", text: "Fíjate un tiempo máximo para evaluar cada decisión. El análisis infinito es tan dañino como la impulsividad." },
+                { icon: "💡", name: "Separa evaluar de criticar", text: "Cuando des feedback, incluye siempre un punto positivo antes de señalar el riesgo. Tu evaluación se percibe como ayuda, no como obstáculo." },
+                { icon: "🔥", name: "Genera entusiasmo", text: "Cuando apruebes una idea, exprésalo con energía. Tu validación tiene mucho peso; úsala también para motivar." },
+                { icon: "🎯", name: "Define el umbral de decisión", text: "Antes de analizar, acuerda con el equipo qué nivel de certeza es suficiente para avanzar." },
+                { icon: "🤝", name: "Alianza con el Creativo", text: "Combina tu rigor analítico con la innovación del Creativo. Esa dualidad produce las mejores decisiones del equipo." },
+                { icon: "📣", name: "Comunica tus conclusiones", text: "No basta con llegar a la conclusión correcta. Aprende a venderla internamente para que el equipo la adopte." }
+            ]
+        },
+        "Impulsor": {
+            titulo: "El Impulsor",
+            color: "#ef4444",
+            desc1: "Eres el motor del equipo. Tu coraje y determinación garantizan que los proyectos avancen y se cumplan los plazos, aunque tu intensidad puede generar fricción.",
+            desc3: "Tu energía es el combustible que necesita el equipo para no pararse. El reto es aprender a calibrar cuándo apretar y cuándo dar espacio para que los demás puedan seguirte.",
+            iconosDesc: [
+                { i: "🚀", t: "Generas momentum y mantienes el impulso cuando el grupo desfallece." },
+                { i: "⚡", t: "Tu energía es contagiosa y reactiva al equipo en momentos críticos." },
+                { i: "🏆", t: "Tu coraje enfrenta los obstáculos directamente sin rodeos." },
+                { i: "🎯", t: "Tu enfoque en resultados garantiza que los plazos se cumplan." },
+                { i: "🔥", t: "Generas urgencia cuando el equipo se relaja o pierde el foco." },
+                { i: "⚔️", t: "No temes al conflicto cuando es necesario para desbloquear la situación." },
+                { i: "🦁", t: "Tu presencia natural genera autoridad en momentos de vacío de liderazgo." },
+                { i: "📢", t: "Comunicas tus expectativas con claridad sin dejar espacio a ambigüedades." },
+                { i: "🌪️", t: "Tu velocidad de reacción es una ventaja en situaciones de crisis." },
+                { i: "🏗️", t: "Construyes tracción y avance donde antes había parálisis o debate infinito." },
+                { i: "🧭", t: "Mantienes el norte del proyecto cuando el grupo se pierde en los detalles." },
+                { i: "🔋", t: "Tu resistencia al desgaste es superior a la media del equipo." },
+                { i: "💪", t: "Presionas al equipo para superarse, logrando resultados que creían imposibles." },
+                { i: "🛡️", t: "Proteges al equipo de la complacencia y del conformismo." }
+            ],
+            positivos: ["Eres el motor que hace avanzar al equipo.", "Tu coraje enfrenta los obstáculos directamente.", "Aseguras que los plazos se cumplan sin excusas.", "Generas urgencia cuando el equipo se relaja."],
+            negativos: ["Tu impaciencia puede generar fricción innecesaria.", "Puedes herir sensibilidades cuando la presión sube.", "Tu intensidad a veces eclipsa las aportaciones de otros."],
+            quickwins: [
+                { icon: "🌡️", name: "Calibra la intensidad", text: "Antes de presionar, evalúa si la situación lo requiere. Reserva tu máxima intensidad para las crisis reales." },
+                { icon: "👂", name: "Escucha antes de empujar", text: "Dedica 60 segundos a escuchar la posición del otro antes de contraatacar. Mejorarás tu tasa de acuerdo notablemente." },
+                { icon: "💬", name: "Cambia 'Tú' por el hecho", text: "En vez de 'siempre llegas tarde', di 'el informe llegó fuera de plazo'. Atacas el problema, no a la persona." },
+                { icon: "🐢", name: "Baja el ritmo estratégicamente", text: "Un mensaje duro dicho con calma tiene el doble de impacto. Practica reducir tu velocidad vocal en momentos críticos." },
+                { icon: "🏆", name: "Celebra los logros", text: "Tu energía para señalar errores es alta. Equilibra con reconocimiento explícito cuando el equipo ejecuta bien." },
+                { icon: "🧭", name: "Comparte la urgencia", text: "Comunica tu sentido de urgencia en reuniones breves de 5 minutos. Multiplicas tu impulso sin quemarte solo." }
+            ]
+        },
+        "Implementador": {
+            titulo: "El Implementador",
+            color: "#10b981",
+            desc1: "Conviertes ideas abstractas en planes ejecutables. Tu organización y disciplina son el pilar del equipo, aunque te cuesta adaptarte cuando los planes cambian inesperadamente.",
+            desc3: "Tu capacidad de convertir el caos en orden es lo que hace que las cosas sucedan realmente. El reto es desarrollar flexibilidad para adaptarte cuando el plan necesita cambiar.",
+            iconosDesc: [
+                { i: "⚙️", t: "Transformas ideas abstractas en planes de trabajo eficientes y claros." },
+                { i: "📋", t: "Tu organización sistemática es el esqueleto que sostiene al equipo." },
+                { i: "🏗️", t: "Construyes estructuras y procesos que garantizan la ejecución consistente." },
+                { i: "⏰", t: "Tu disciplina con los plazos es un referente que el equipo respeta." },
+                { i: "🔧", t: "Solucionas problemas operativos con pragmatismo y eficiencia." },
+                { i: "📐", t: "Tu método sistemático reduce errores y desperdicio de recursos." },
+                { i: "🌉", t: "Construyes puentes entre las ideas del equipo y su implementación real." },
+                { i: "🛡️", t: "Proteges al equipo de la improvisación con planes bien fundamentados." },
+                { i: "📊", t: "Mides el progreso con métricas claras que dan visibilidad al avance." },
+                { i: "🔗", t: "Conectas las tareas individuales en un flujo de trabajo coherente." },
+                { i: "💪", t: "Tu capacidad de trabajo sostenida es difícil de igualar en el equipo." },
+                { i: "🎯", t: "Mantienes el foco en lo que realmente genera resultado evitando distracciones." },
+                { i: "🏆", t: "Tu fiabilidad hace que el equipo pueda confiar en que lo acordado se cumplirá." },
+                { i: "🌱", t: "Creas hábitos y rutinas de trabajo que mejoran la productividad del grupo." }
+            ],
+            positivos: ["Conviertes ideas abstractas en planes ejecutables.", "Tu organización es el pilar del equipo.", "Eres disciplinado y confiable en los plazos.", "Produces resultados tangibles de forma consistente."],
+            negativos: ["Puedes resistirte a cambios de plan en mitad del proceso.", "A veces priorizas el método sobre el resultado.", "Te cuesta adaptarte a entornos caóticos o muy ambiguos."],
+            quickwins: [
+                { icon: "🔄", name: "Flexibilidad planificada", text: "Incluye en tus planes un margen del 20% para imprevistos. Un plan con colchón es más robusto que uno perfecto pero rígido." },
+                { icon: "🎨", name: "Abraza el caos inicial", text: "La generación de ideas es necesariamente desordenada. Tu trabajo empieza cuando hay algo concreto que organizar." },
+                { icon: "🚀", name: "Comparte el plan pronto", text: "No esperes a tener el plan perfecto. Un borrador temprano permite al equipo corregir el rumbo antes." },
+                { icon: "🌿", name: "Adapta, no abandones", text: "Cuando el plan cambia, pregunta: '¿Cuál es la nueva versión más eficiente de este plan?' en lugar de resistir." },
+                { icon: "⭐", name: "Valora la creatividad ajena", text: "Aunque prefieras la certeza, valida las ideas creativas públicamente. Te ganarás la confianza de los perfiles más innovadores." },
+                { icon: "📊", name: "KPIs de ejecución", text: "Define métricas claras de progreso y compártelas. Los datos convierten tu rigor en algo visible y valorado." }
+            ]
+        },
+        "Finalizador": {
+            titulo: "El Finalizador",
+            color: "#14b8a6",
+            desc1: "Garantizas que nada quede a medias. Tu atención al detalle y tu perfeccionismo protegen la calidad final del trabajo, aunque pueden convertirse en un cuello de botella.",
+            desc3: "Tu rol de cierre es indispensable para que el equipo entregue con la calidad que promete. El reto es aprender a distinguir qué detalles son críticos y cuáles son prescindibles.",
+            iconosDesc: [
+                { i: "✅", t: "Garantizas que las tareas se completen con perfección y sin errores." },
+                { i: "🔍", t: "Tu atención al detalle detecta imperfecciones que otros no perciben." },
+                { i: "🏆", t: "Proteges la reputación del equipo asegurando entregas de máxima calidad." },
+                { i: "⏰", t: "No descanses hasta que cada aspecto del trabajo esté correctamente cerrado." },
+                { i: "🛡️", t: "Eres el último filtro de calidad antes de que el trabajo salga al mundo." },
+                { i: "📋", t: "Tu checklist mental garantiza que nada importante se quede sin hacer." },
+                { i: "🎯", t: "Mantienes los estándares de calidad incluso bajo presión de tiempo." },
+                { i: "🔧", t: "Ajustas y pulES los detalles finales hasta que el resultado es impecable." },
+                { i: "💎", t: "Tu presencia en el equipo es la garantía de un entregable sin fisuras." },
+                { i: "⚙️", t: "Optimizas los procesos de cierre para que sean eficientes y sistemáticos." },
+                { i: "🌟", t: "Elevas la percepción de calidad de todo lo que el equipo produce." },
+                { i: "📐", t: "Tu rigor en la revisión final marca la diferencia entre bueno y excelente." },
+                { i: "🔗", t: "Cierras los flecos que, de quedarse abiertos, crearían problemas futuros." },
+                { i: "🏗️", t: "Construyes una reputación de fiabilidad que el equipo proyecta al exterior." }
+            ],
+            positivos: ["Garantizas que nada quede a medias.", "Tu atención al detalle es excepcional.", "Proteges la calidad final del trabajo.", "Eres quien cierra lo que otros dejan abierto."],
+            negativos: ["Puedes frenar el ritmo del equipo con revisiones excesivas.", "Te cuesta delegar porque desconfías de la calidad ajena.", "Tu perfeccionismo puede convertirse en un cuello de botella."],
+            quickwins: [
+                { icon: "📏", name: "Define 'suficientemente bueno'", text: "Antes de empezar, acuerda con el equipo el estándar mínimo aceptable. Eso libera tu energía para lo que realmente importa." },
+                { icon: "🤝", name: "Delega con criterios", text: "En lugar de no delegar, delega con una checklist de calidad. Das autonomía sin perder el control." },
+                { icon: "⏰", name: "Revisiones con límite", text: "Pon un tiempo máximo a tus revisiones. Cuando suene el reloj, lo que está, está." },
+                { icon: "🔎", name: "Separa revisión de entrega", text: "Establece fases separadas de creación, revisión y entrega. Mezclarlas genera un proceso ineficiente y agotador." },
+                { icon: "🌟", name: "Confía en el equipo", text: "Identifica a un colega de confianza y practica entregarle trabajo sin revisarlo. Progresivamente ampliarás ese círculo." },
+                { icon: "🎯", name: "Enfócate en los riesgos clave", text: "No todos los detalles tienen el mismo impacto. Prioriza tu atención en los errores que podrían comprometer el resultado final." }
+            ]
+        },
+        "Cohesionador": {
+            titulo: "El Cohesionador",
+            color: "#f59e0b",
+            desc1: "Eres el pegamento emocional del grupo. Tu diplomacia reduce el conflicto y fomenta la colaboración de forma natural, aunque a veces evitas decisiones difíciles para no generar tensión.",
+            desc3: "Tu rol social es el que mantiene al equipo unido cuando las tensiones aparecen. El reto es aprender a usar esa habilidad también para abrir conversaciones difíciles que el grupo necesita tener.",
+            iconosDesc: [
+                { i: "🤝", t: "Fomentas la cooperación y el respeto mutuo de forma completamente natural." },
+                { i: "👂", t: "Escuchas a todos con atención y haces que cada persona se sienta valorada." },
+                { i: "🕊️", t: "Reduces la tensión y el conflicto con una habilidad diplomática excepcional." },
+                { i: "💛", t: "Tu calidez crea un ambiente de trabajo donde la gente se siente segura." },
+                { i: "🌉", t: "Construyes puentes entre personas con puntos de vista muy diferentes." },
+                { i: "🛡️", t: "Proteges la salud emocional del equipo en momentos de alta presión." },
+                { i: "🌱", t: "Nutres las relaciones interpersonales que hacen que el equipo funcione." },
+                { i: "🎭", t: "Adaptas tu comunicación a cada persona con una empatía excepcional." },
+                { i: "⚖️", t: "Encuentras el punto de equilibrio cuando hay posiciones muy polarizadas." },
+                { i: "🔗", t: "Mantienes la cohesión del grupo incluso bajo presión extrema." },
+                { i: "🌟", t: "Tu reconocimiento genuino de los demás multiplica la motivación del equipo." },
+                { i: "🎯", t: "Identificas las necesidades no verbales de tus compañeros antes de que las expresen." },
+                { i: "🧩", t: "Integras a los miembros más periféricos del equipo en la dinámica del grupo." },
+                { i: "💬", t: "Facilitas conversaciones difíciles con una delicadeza que el equipo agradece." }
+            ],
+            positivos: ["Reduces el conflicto y la tensión en el equipo.", "Escuchas a todos y haces que se sientan valorados.", "Fomentas la cooperación de forma natural.", "Eres el pegamento emocional del grupo."],
+            negativos: ["Puedes evitar decisiones difíciles para no generar conflicto.", "A veces tu diplomacia retrasa conversaciones necesarias.", "Puedes asumir la carga emocional de todo el equipo."],
+            quickwins: [
+                { icon: "⚖️", name: "El conflicto útil", text: "Aprende a distinguir el conflicto dañino del productivo. A veces un debate intenso produce la mejor decisión del equipo." },
+                { icon: "🛑", name: "No rescates siempre", text: "Cuando dos personas discuten, practica no intervenir inmediatamente. Tu mediación tiene más impacto si no es automática." },
+                { icon: "💬", name: "Di lo incómodo", text: "Hay conversaciones que el equipo necesita y que nadie quiere iniciar. Tu habilidad social te hace la persona ideal para abrirlas." },
+                { icon: "🔋", name: "Gestiona tu energía", text: "No puedes ser el amortiguador emocional de todos. Establece límites sobre qué carga emocional ajena asumes." },
+                { icon: "🎯", name: "Posiciona tu opinión", text: "Tienes opiniones valiosas que a veces no compartes para no generar tensión. Practica expresarlas con suavidad pero firmeza." },
+                { icon: "🏆", name: "Celebra el proceso", text: "Eres el más indicado para reconocer el esfuerzo del equipo. Hazlo explícitamente y de forma regular." }
+            ]
+        },
+        "Buscador de Recursos": {
+            titulo: "El Buscador de Recursos",
+            color: "#f97316",
+            desc1: "Traes oportunidades y contactos externos que el equipo no tendría. Tu red y tu entusiasmo son activos estratégicos, aunque a veces pierdes interés una vez que el reto inicial desaparece.",
+            desc3: "Tu capacidad de abrir puertas es única. El reto es aprender a cerrar lo que abres y a mantener el compromiso más allá del entusiasmo inicial del proyecto.",
+            iconosDesc: [
+                { i: "🌐", t: "Tu red de contactos es un activo estratégico que el equipo no tendría." },
+                { i: "🔎", t: "Exploras oportunidades externas con una energía y curiosidad excepcionales." },
+                { i: "🚀", t: "Generas entusiasmo y tracción al inicio de cada nuevo proyecto." },
+                { i: "🌟", t: "Abres puertas que otros ni siquiera saben que existen." },
+                { i: "💬", t: "Tu comunicación fluida te hace brillar en negociaciones y partnerships." },
+                { i: "⚡", t: "Tu energía es máxima cuando hay un nuevo reto o una oportunidad por explorar." },
+                { i: "🎯", t: "Identificas aliados y recursos externos con una velocidad impresionante." },
+                { i: "🌉", t: "Construyes puentes entre el equipo y el mundo exterior con naturalidad." },
+                { i: "🏆", t: "Tu optimismo ante los retos contagia al equipo cuando el camino se pone difícil." },
+                { i: "🔗", t: "Conectas personas y organizaciones que solas no habrían llegado a colaborar." },
+                { i: "🎨", t: "Traes perspectivas externas que enriquecen las soluciones del equipo." },
+                { i: "🌱", t: "Siembras semillas de colaboración que dan frutos a largo plazo." },
+                { i: "🦋", t: "Tu adaptabilidad te permite moverte en entornos muy diferentes con soltura." },
+                { i: "📢", t: "Representas al equipo en el exterior con una imagen positiva y profesional." }
+            ],
+            positivos: ["Traes oportunidades y contactos que el equipo no tendría.", "Tu red de contactos es un activo estratégico.", "Generas entusiasmo y energía en el grupo.", "Abres puertas que otros no ven."],
+            negativos: ["Puedes perder interés una vez que el reto inicial desaparece.", "A veces prometes más de lo que luego puedes cumplir.", "Te cuesta centrarte en la ejecución una vez iniciado el proyecto."],
+            quickwins: [
+                { icon: "📋", name: "Cierra lo que abres", text: "Por cada oportunidad que traigas, define quién la ejecuta y en qué plazo. Tu energía de apertura necesita un partner de cierre." },
+                { icon: "🔋", name: "Gestiona tu entusiasmo", text: "Tu energía puede ser intermitente. Avisa cuando tu motivación baje para que el equipo no dependa de ti en ese momento." },
+                { icon: "✅", name: "Compromisos concretos", text: "Antes de prometer algo a un contacto externo, verifica internamente que el equipo puede cumplirlo." },
+                { icon: "⏱️", name: "Fases de exploración", text: "Reserva momentos específicos para networking. El resto del tiempo, ejecuta lo ya comprometido." },
+                { icon: "📊", name: "Mide tus contactos", text: "Lleva un registro de los contactos que activas y los resultados que generan. Prioriza donde invertir tu energía." },
+                { icon: "🤝", name: "Alianza con el Finalizador", text: "Tu capacidad de abrir puertas combinada con alguien que cierra cada detalle es una combinación imbatible." }
+            ]
+        },
+        "Coordinador": {
+            titulo: "El Coordinador",
+            color: "#1e293b",
+            desc1: "Lideras de forma natural sin necesidad de imponerte. Sabes sacar lo mejor de cada persona y mantener el foco en los objetivos, aunque a veces dependes demasiado del consenso para avanzar.",
+            desc3: "Tu liderazgo integrador es lo que permite que los talentos individuales del equipo se sumen en lugar de restarse. El reto es aprender a tomar decisiones más rápido cuando el consenso tarda demasiado.",
+            iconosDesc: [
+                { i: "🧭", t: "Clarificas los objetivos y mantienes al equipo enfocado en lo que importa." },
+                { i: "👥", t: "Sabes asignar las tareas correctas a las personas correctas con precisión." },
+                { i: "🌟", t: "Tu liderazgo emerge de forma natural sin necesidad de imponerte." },
+                { i: "⚖️", t: "Promueves decisiones equilibradas que integran las perspectivas del grupo." },
+                { i: "🤝", t: "Delegas con confianza, empoderando a los miembros del equipo." },
+                { i: "🎯", t: "Mantienes el norte del proyecto cuando el grupo se dispersa en los detalles." },
+                { i: "🔗", t: "Conectas las fortalezas individuales para crear una sinergia grupal real." },
+                { i: "🌉", t: "Construyes consenso sin perder de vista la eficiencia y los plazos." },
+                { i: "💬", t: "Tu comunicación clara reduce malentendidos y alinea expectativas." },
+                { i: "🛡️", t: "Proteges al equipo de las presiones externas que podrían desestabilizarlo." },
+                { i: "🏗️", t: "Construyes equipos de alto rendimiento con una mezcla equilibrada de perfiles." },
+                { i: "🔭", t: "Ves el cuadro completo mientras los demás se centran en sus áreas." },
+                { i: "⚡", t: "Reactivas al equipo cuando la energía decae con la motivación correcta." },
+                { i: "🏆", t: "Atribuyes los éxitos al equipo, construyendo una cultura de logro compartido." }
+            ],
+            positivos: ["Líderas de forma natural sin necesidad de imponerte.", "Sabes sacar lo mejor de cada persona del equipo.", "Mantienes el foco en los objetivos cuando el grupo se dispersa.", "Delegas con efectividad y confianza."],
+            negativos: ["Puedes percibirse como alguien que delega pero no ejecuta.", "A veces tu confianza en el equipo retrasa decisiones urgentes.", "Puedes depender demasiado del consenso para avanzar."],
+            quickwins: [
+                { icon: "⚡", name: "Decide sin consenso total", text: "No siempre puedes esperar a que todos estén de acuerdo. Practica tomar decisiones con el 70% de alineación." },
+                { icon: "🔧", name: "Muestra que ejecutas", text: "De vez en cuando, toma una tarea operativa visible. Refuerza tu credibilidad ante quienes piensan que solo coordinas." },
+                { icon: "🗣️", name: "Feedback directo", text: "Tu estilo de delegar es valioso. Combínalo con feedback claro y regular para que tu equipo sepa cómo lo está haciendo." },
+                { icon: "🎯", name: "Define el 'por qué'", text: "Antes de delegar una tarea, explica brevemente por qué es importante. Aumentas el compromiso y la calidad del resultado." },
+                { icon: "⏰", name: "Check-ins de 10 minutos", text: "Sustituye una reunión larga semanal por tres check-ins de 10 minutos. Mantienes el pulso del equipo con mucho menos tiempo." },
+                { icon: "🏆", name: "Atribución pública de logros", text: "Cuando el equipo triunfa, atribuye el éxito a las personas concretas. Tu liderazgo se solidifica con cada reconocimiento." }
+            ]
+        }
+    };
+
+    // ==========================================
+    // PDF ROLES: LÓGICA PRINCIPAL
+    // ==========================================
+    let rolesUserName = "";
+
+    function rolesPedirNombre() {
+        document.getElementById('nombreModalRoles').style.display = 'flex';
+    }
+
+    async function rolesConfirmarNombre() {
+    const nombre = document.getElementById('roles-nombreUsuario').value.trim();
+    const email  = document.getElementById('roles-userEmail').value.trim();
+    if (nombre.length < 3) { alert("Por favor introduce tu nombre y apellido."); return; }
+    if (!email.includes("@") || !email.includes(".")) { alert("Por favor introduce un email válido."); return; }
+    rolesUserName = nombre;
+    document.getElementById('nombreModalRoles').style.display = 'none';
+    
+    // VALIDACIÓN DESACTIVADA TEMPORALMENTE PARA PRUEBAS LOCALES:
+    // const _ok = await retorikaUsarCredito();
+    // if (!_ok) return;
+    
+    await rolesGenerarPDF(email);
+}
+
+    function rolesInjectFooters() {
+        const footerHTML = `
+            <div class="pdf-footer">
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:#1a2b4a; font-weight:600;">
+                    <div style="display:flex; align-items:center; gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4472c4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg><span>asesoriaretorika.com</span></div>
+                    <div style="display:flex; align-items:center; gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4472c4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><span>direccion@retorika.es</span></div>
+                    <div style="display:flex; align-items:center; gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4472c4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg><span>@retorika_academy</span></div>
+                    <div style="display:flex; align-items:center; gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4472c4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg><span>+34 646 419 652</span></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:9px; color:#94a3b8; padding-top:2px;">
+                    <span class="roles-fecha-print"></span><span class="roles-page-num"></span>
+                </div>
+            </div>`;
+        const pages = document.querySelectorAll('#contenedor-impresion-roles .pdf-page');
+        pages.forEach((page, i) => {
+            page.insertAdjacentHTML('beforeend', footerHTML);
+            page.querySelector('.roles-page-num').innerText = `Confidencial | Página ${i+1} de ${pages.length}`;
+        });
+    }
+
+    async function rolesGenerarPDF(emailUsuario) {
+        document.getElementById('loading-modal-roles').style.display = 'flex';
+        try {
+            // Inyectar footers si no están ya
+            if (!document.querySelector('#contenedor-impresion-roles .pdf-footer')) {
+                rolesInjectFooters();
+            }
+
+            const fecha = new Date().toLocaleDateString();
+            document.querySelectorAll('.roles-fecha-print').forEach(el => el.innerText = "Fecha: " + fecha);
+            document.getElementById('roles-pdf-nombre').innerText = rolesUserName;
+
+            // ── Calcular datos ordenados ──────────────────────────────────
+            const sortedRolesArray = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+            const totalPoints      = Object.values(scores).reduce((a, b) => a + b, 0);
+            const topRole          = sortedRolesArray[0][0];
+            const topPct           = ((scores[topRole] / totalPoints) * 100).toFixed(1);
+
+            const catScores = {
+                Mentales: scores["Creativo"]     + scores["Evaluador"]      + scores["Especialista"],
+                Acción:   scores["Impulsor"]     + scores["Implementador"]  + scores["Finalizador"],
+                Sociales: scores["Coordinador"]  + scores["Buscador de Recursos"] + scores["Cohesionador"]
+            };
+            const sortedCats = Object.entries(catScores).sort((a, b) => b[1] - a[1]);
+
+            const roleColors = {
+                "Creativo":"#3b82f6","Especialista":"#8b5cf6","Evaluador":"#E22684",
+                "Impulsor":"#ef4444","Implementador":"#10b981","Finalizador":"#14b8a6",
+                "Cohesionador":"#f59e0b","Buscador de Recursos":"#f97316","Coordinador":"#1e293b"
+            };
+
+            const perfil = DB_ROLES[topRole];
+
+            // ── PÁGINA 1 ───────────────────────────────────────────────────
+            document.getElementById('roles-pdf-top-role').innerText = topRole;
+            document.getElementById('roles-pdf-top-pct').innerText  = topPct + "%";
+
+            // Podio categorías
+            const medalIcons = ["🥇", "🥈", "🥉"];
+            const podiumBg   = ["#fef3c7", "#f1f5f9", "#ffedd5"];
+            const podiumCol  = ["#b45309", "#475569", "#c2410c"];
+            document.getElementById('roles-pdf-podium').innerHTML = sortedCats.map((c, i) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 10px; border-radius:8px; background:${podiumBg[i]}; color:${podiumCol[i]}; font-weight:700; font-size:11px;">
+                    <span>${medalIcons[i]} ${c[0]}</span><span>${c[1]} pts</span>
+                </div>`).join('');
+
+            // Barras de los 9 roles
+            document.getElementById('roles-pdf-bars').innerHTML = sortedRolesArray.map(([role, pts]) => {
+                const pct = ((pts / totalPoints) * 100).toFixed(1);
+                return `<div>
+                    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:#1a2b4a; margin-bottom:3px;">
+                        <span>${role}</span><span style="color:${roleColors[role]}">${pct}%</span>
+                    </div>
+                    <div style="height:6px; background:#e2e8f0; border-radius:10px;">
+                        <div style="width:${pct}%; height:100%; background:${roleColors[role]}; border-radius:10px;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('roles-pdf-resumen').innerText =
+                "Rol principal: " + topRole + " — " + (reportData.roles[topRole] || "") +
+                " · Enfoque predominante: " + sortedCats[0][0] + " — " + (reportData.categorias[sortedCats[0][0]] || "");
+
+            // ── PÁGINA 2 ───────────────────────────────────────────────────
+            document.getElementById('roles-pdf-p2-desc').innerText =
+                "Tu perfil Belbin dominante es " + perfil.titulo + ". " + perfil.desc1;
+
+            document.getElementById('roles-pdf-p2-icons').innerHTML = perfil.iconosDesc.map(ic => `
+                <div style="display:flex; gap:15px; align-items:center; background:#f8faff; padding:0 20px; border-radius:10px; border:1px solid #e2e8f0; box-shadow:0 2px 4px rgba(0,0,0,0.01); height:100%; box-sizing:border-box;">
+                    <span style="font-size:24px; flex-shrink:0;">${ic.i}</span>
+                    <span style="font-size:12px; color:#334155; font-weight:500; line-height:1.4;">${ic.t}</span>
+                </div>`).join('');
+
+            document.getElementById('roles-pdf-p2-pos').innerHTML = perfil.positivos.map(p => `
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <span style="color:#22c55e; font-weight:800; font-size:17px; flex-shrink:0;">✓</span>
+                    <span style="font-size:13.5px; color:#14532d; line-height:1.5;">${p}</span>
+                </div>`).join('');
+
+            document.getElementById('roles-pdf-p2-neg').innerHTML = perfil.negativos.map(p => `
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <span style="color:#ef4444; font-weight:800; font-size:17px; flex-shrink:0;">✗</span>
+                    <span style="font-size:13.5px; color:#7f1d1d; line-height:1.5;">${p}</span>
+                </div>`).join('');
+
+            // ── PÁGINA 3 ───────────────────────────────────────────────────
+            document.getElementById('roles-pdf-p3-sub').innerText = perfil.desc3;
+
+            document.getElementById('roles-pdf-p3-quickwins').innerHTML = perfil.quickwins.map(q => `
+                <div style="flex-grow:1; display:flex; align-items:center; gap:18px; background:#f8faff; border-radius:12px; padding:15px 22px; border:1px solid #e2e8f0; border-left:5px solid ${perfil.color}; box-shadow:0 4px 6px rgba(0,0,0,0.02); min-height:0;">
+                    <div style="font-size:36px; flex-shrink:0;">${q.icon}</div>
+                    <div class="texto-plan-ajustable">
+                        <h4 style="margin:0 0 5px 0; font-size:14px; color:#1a2b4a; text-transform:uppercase; font-family:'Montserrat';">${q.name}</h4>
+                        ${q.text}
+                    </div>
+                </div>`).join('');
+
+            // ── Auto-escalado página 3 ─────────────────────────────────────
+            const masterContainer = document.getElementById('contenedor-impresion-roles');
+            masterContainer.style.left = "0";
+            await new Promise(r => setTimeout(r, 300));
+
+            const page3 = document.getElementById('roles-content-page-3');
+            if (page3) {
+                let currentSize = 13.5;
+                const textos = page3.querySelectorAll('.texto-plan-ajustable');
+                while (page3.scrollHeight > page3.clientHeight && currentSize > 8.5) {
+                    currentSize -= 0.2;
+                    textos.forEach(t => t.style.fontSize = currentSize + 'px');
+                }
+            }
+            await new Promise(r => setTimeout(r, 100));
+
+            // ── Generar PDF ────────────────────────────────────────────────
+            const { jsPDF } = window.jspdf;
+            const pdf     = new jsPDF('p', 'mm', 'a4');
+            const paginas = masterContainer.querySelectorAll('.pdf-page');
+
+            for (let i = 0; i < paginas.length; i++) {
+                if (i > 0) pdf.addPage();
+                const canvas = await html2canvas(paginas[i], { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+                pdf.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+            }
+
+            masterContainer.style.left = "-9999px";
+
+            pdf.save(`Roles_Equipo_Belbin_${rolesUserName.replace(/\s+/g, '_')}.pdf`);
+            try { window.parent.postMessage({ action: 'pdf_descargado' }, '*'); } catch(e) {}
+
+            const pdfBase64 = pdf.output('datauristring');
+            rolesEnviarEmail(rolesUserName, emailUsuario, pdfBase64);
+
+            // Actualizar botón
+            const btn = document.getElementById('roles-pdf-btn');
+            if (btn) {
+                btn.disabled         = true;
+                btn.innerHTML        = "✅ INFORME ENVIADO";
+                btn.style.background = "#16a34a";
+                btn.style.cursor     = "not-allowed";
+            }
+
+        } catch(e) {
+            console.error("Error generando PDF Roles:", e);
+            alert("Error al generar el PDF. Revisa la consola.");
+            document.getElementById('contenedor-impresion-roles').style.left = "-9999px";
+        } finally {
+            document.getElementById('loading-modal-roles').style.display = 'none';
+        }
+    }
+
+    function rolesEnviarEmail(nombre, email, archivoBase64) {
+        if (!email || !email.includes("@")) return;
+        fetch("../enviar_correo.php", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, email, origen: "Test de Roles de Equipo Belbin", adjuntoPDF: archivoBase64 })
+        }).then(r => r.json()).then(data => {
+            if (data.success) console.log("✅ Email enviado correctamente.");
+            else console.error("❌ Error PHP:", data.message);
+        }).catch(e => console.error('Error conexión PHP:', e));
+    }
+
+    async function retorikaUsarCredito() {
+        if (window._rkGenerando) return false;
+        window._rkGenerando = true;
+        const creditId = localStorage.getItem("rk_report_credit_id") || sessionStorage.getItem("rk_report_credit_id");
+        const toolId   = sessionStorage.getItem("rk_report_tool_id");
+        const token    = localStorage.getItem("rk_token_v3");
+        if (!creditId || !toolId || !token) {
+            window._rkGenerando = false;
+            alert("Acceso no válido. Vuelve al menú principal y entra desde la tarjeta de la herramienta.");
+            return false;
+        }
+        try {
+            const res = await fetch("/api/use-report.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                body: JSON.stringify({ tool_id: toolId, credit_id: parseInt(creditId) })
+            });
+            const data = await res.json();
+            if (data.ok) {
+              try {
+                const _rtkT = localStorage.getItem('rtk_token')||localStorage.getItem('rk_token_v3')||'';
+                if(_rtkT) fetch('/api/guardar-resultado.php',{
+                  method:'POST',
+                  headers:{'Content-Type':'application/json','Authorization':'Bearer '+_rtkT},
+                  body:JSON.stringify({tool_id:'quiz_roles',resultado_clave:'rol_belbin',resultado_valor:typeof sortedCats!=='undefined'&&sortedCats.length>0?sortedCats[0][0]:'Completado',datos:{categorias:typeof reportData!=='undefined'?reportData.categorias:{}}})
+                }).catch(()=>{});
+              } catch(e) {}
+            }
+            if (!data.ok) { alert("Error: " + (data.error || "inténtalo de nuevo")); return false; }
+            sessionStorage.removeItem("rk_report_credit_id");
+            window._rkGenerando = false;
+            return true;
+        } catch(e) {
+            window._rkGenerando = false;
+            alert("Error de conexión al verificar tu acceso.");
+            return false;
+        }
+    }
+
+
+    initQuiz();
+</script>
+
+</body>
+</html>
